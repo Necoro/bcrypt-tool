@@ -3,17 +3,13 @@ bcrypt-tool
 
 `bcrypt-tool` is a dandy CLI tool for generating and matching bcrypt hashes
 
-[![GitHub](https://img.shields.io/github/license/shoenig/bcrypt-tool.svg)](LICENSE)
+It is forked from [shoening/bcrypt-tool](https://github.com/shoenig/bcrypt-tool).
 
-# Project Overview
-
-Module `github.com/shoenig/bcrypt-tool` provides a simple command line tool.
-
-# Getting Started
+### Installation
 
 #### Install from Releases
 
-The `bcrypt-tool` tool is available from the [Releases](https://github.com/shoenig/bcrypt-tool/releases) page.
+The `bcrypt-tool` tool is available from the [Releases](https://github.com/Necoro/bcrypt-tool/releases) page.
 
 It is pre-compiled for many operating systems and architectures including
 
@@ -27,8 +23,22 @@ It is pre-compiled for many operating systems and architectures including
 #### Build from source
 The `bcrypt-tool` command can be compiled by running
 ```bash
-$ go get github.com/shoenig/bcrypt-tool
+$ go install github.com/Necoro/bcrypt-tool@latest
 ```
+
+### Usage
+```bash
+bcrypt-tool [action] parameter ...
+```
+
+#### Actions
+
+- `hash  [password] <cost>` Use bcrypt to generate a hash given password and optional cost (4-31)
+
+- `match [password] [hash]` Use bcrypt to check if a password matches a hash
+
+- `cost  [hash]` Use bcrypt to determine the cost of a hash (4-31)
+
 
 ### Examples
 
@@ -56,24 +66,6 @@ $ bcrypt-tool cost $2a$10$nWFwjoFo4zhyVosdYMb6XOxZqlVB9Bk0TzOvmuo16oIwMZJXkpanW
     
 note: depending on your shell, you may need to escape the $ characters
 
-### Usage
-```bash
-bcrypt-tool [action] parameter ...
-```
-
-#### Actions
-
-- `hash  [password] <cost>` Use bcrypt to generate a hash given password and optional cost (4-31)
-
-- `match [password] [hash]` Use bcrypt to check if a password matches a hash
-
-- `cost  [hash]` Use bcrypt to determine the cost of a hash (4-31)
-
-# Contributing
-
-The `github.com/shoenig/bcrypt-tool` module is always improving with new features
-and error corrections. For contributing bug fixes and new features please file an issue.
-
 # License
 
-The `github.com/shoenig/bcrypt-tool` module is open source under the [MIT](LICENSE) license.
+This module is open source under the [MIT](LICENSE) license.

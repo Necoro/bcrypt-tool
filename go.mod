@@ -1,4 +1,4 @@
-module github.com/shoenig/bcrypt-tool
+module github.com/Necoro/bcrypt-tool
 
 go 1.26
 
