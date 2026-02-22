@@ -25,12 +25,12 @@ const (
 )
 
 type PwdInfo struct {
-	TruncInput bool   `name:"truncate" help:"accept password input longer than ${maxPasswordLength} and truncate it"`
-	Password   string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
+	TruncInput bool   `name:"truncate" help:"Accept password input longer than ${maxPasswordLength} and truncate it."`
+	Password   string `arg:"" optional:"" help:"Read from stdin if omitted or '-'."`
 }
 
 type HashCmd struct {
-	Cost    int `short:"c" help:"cost parameter for bcrypt" default:"${DEFAULT_COST}"`
+	Cost    int `short:"c" help:"Cost parameter for bcrypt." default:"${DEFAULT_COST}"`
 	PwdInfo `embed:""`
 }
 
@@ -70,7 +70,7 @@ func (h Hash) Validate() error {
 }
 
 type MatchCmd struct {
-	Quiet   bool `short:"q" help:"omit printing the result"`
+	Quiet   bool `short:"q" help:"Omit printing the result."`
 	Hash    Hash `arg:""`
 	PwdInfo `embed:""`
 }
@@ -111,10 +111,10 @@ func (cmd *CostCmd) Run() error {
 }
 
 var CLI struct {
-	Hash    HashCmd          `cmd:"" help:"generate a bcrypt hash"`
-	Match   MatchCmd         `cmd:"" help:"check if password matches hash"`
-	Cost    CostCmd          `cmd:"" help:"print the cost of the given hash"`
-	Version kong.VersionFlag `help:"print the current version (${version})"`
+	Hash    HashCmd          `cmd:"" help:"Generate a bcrypt hash."`
+	Match   MatchCmd         `cmd:"" help:"Check if password matches hash."`
+	Cost    CostCmd          `cmd:"" help:"Print the cost of the given hash."`
+	Version kong.VersionFlag `help:"Print the current version (${version})."`
 }
 
 // needed to factor out for tests
@@ -167,7 +167,7 @@ func (p *PwdInfo) readFromStdin() ([]byte, error) {
 	buf := make([]byte, maxLen)
 	n, err := io.ReadFull(os.Stdin, buf)
 	if errors.Is(err, io.EOF) || buf[0] == '\n' || buf[0] == 0 {
-		return nil, fmt.Errorf("no password provided")
+		return nil, errors.New("no password provided")
 	} else if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
 		return nil, fmt.Errorf("reading password: %w", err)
 	} else if n > maxPasswordLength {
