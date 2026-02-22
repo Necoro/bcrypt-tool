@@ -8,65 +8,65 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/alecthomas/kong"
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	helpText = `Usage: bcrypt-tool [action] argument ...
-  ACTIONS
-    hash  [password] <cost> Generate hash given password and optional cost (4-31)
-    match [password] [hash] Print "yes" and return 0 if password is a match
-                            for hash, or print "no" and return 1 otherwise 
-    cost  [hash]            Print the cost of hash (4-31)`
-)
+type HashCmd struct {
+	Cost     int    `short:"c" help:"Cost parameter for bcrypt." default:"${DEFAULT_COST}"`
+	Password string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
+}
 
-func main() {
-	os.Args = os.Args[1:]
+func (cmd *HashCmd) Run() error {
+	fmt.Println(hash(cmd.Password, cmd.Cost))
+	return nil
+}
 
-	if len(os.Args) < 2 {
-		help()
+type MatchCmd struct {
+	Hash     string `arg:""`
+	Password string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
+}
+
+func (cmd *MatchCmd) Run() error {
+	ok := match(cmd.Hash, cmd.Password)
+	if ok {
+		fmt.Println("yes")
+	} else {
+		fmt.Println("no")
+		os.Exit(1)
 	}
-	switch os.Args[0] {
-	case "cost":
-		if len(os.Args) != 2 {
-			help()
-		}
-		c := cost(os.Args[1])
-		fmt.Println(fmt.Sprintf("%d", c))
-	case "match":
-		if len(os.Args) != 3 {
-			help()
-		}
-		ok := match(os.Args[1], os.Args[2])
-		if ok {
-			fmt.Println("yes")
-		} else {
-			fmt.Println("no")
-			os.Exit(1)
-		}
-	case "hash":
-		if len(os.Args) > 4 {
-			help()
-		}
-		passwd := os.Args[1]
-		cost := bcrypt.DefaultCost
-		if len(os.Args) == 3 {
-			c, e := strconv.Atoi(os.Args[2])
-			if e != nil {
-				help()
-			}
-			cost = c
-		}
-		hash := hash(passwd, cost)
-		fmt.Println(hash)
-	default:
-		help()
+	return nil
+}
+
+type CostCmd struct {
+	Hash string `arg:"" help:"read from stdin if omitted or '-'"`
+}
+
+func (cmd *CostCmd) Run() error {
+	c := cost(cmd.Hash)
+	fmt.Printf("%d\n", c)
+	return nil
+}
+
+var CLI struct {
+	Hash  HashCmd  `cmd:"" help:"generate a bcrypt hash" default:"withargs"`
+	Match MatchCmd `cmd:"" help:"check if password matches hash"`
+	Cost  CostCmd  `cmd:"" help:"print the cost of the given hash"`
+}
+
+// needed to factor out for tests
+func kongParserOptions() []kong.Option {
+	return []kong.Option{
+		kong.Vars{
+			"DEFAULT_COST": strconv.Itoa(bcrypt.DefaultCost),
+		},
 	}
 }
 
-func help() {
-	_, _ = fmt.Fprintln(os.Stderr, helpText)
-	os.Exit(2)
+func main() {
+	ctx := kong.Parse(&CLI, kongParserOptions()...)
+	err := ctx.Run()
+	ctx.FatalIfErrorf(err)
 }
 
 func cost(hash string) int {
