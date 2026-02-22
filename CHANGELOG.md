@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.0
+## [2.0.0] - 22.02.2026
 ### Major Changes
 - Password can now be supplied via stdin or interactively. 
 `bcrypt-tool` no longer relies on having the password being passed visibly on the commandline.
@@ -20,3 +20,5 @@ This can be used, for example, to provide a binary file (e.g., a picture) as the
 
 ## 1.x.x
 Please consult the releases in the original repository: https://github.com/shoenig/bcrypt-tool/releases
+
+[2.0.0]: https://github.com/shoenig/bcrypt-tool/compare/v1.1.9...Necoro:bcrypt-tool:v2.0.0

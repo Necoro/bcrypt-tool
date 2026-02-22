@@ -21,7 +21,7 @@ const maxPasswordLength = 72
 
 const (
 	NAME    = "bcrypt-tool"
-	VERSION = "2.0"
+	VERSION = "2.0.0"
 )
 
 type PwdInfo struct {
