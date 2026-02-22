@@ -51,9 +51,29 @@ func (cmd *HashCmd) Run() error {
 	return nil
 }
 
+type Hash string
+
+func (h Hash) Validate() error {
+	if len(h) == 0 {
+		return errors.New("no hash given")
+	}
+	if h[0] != '$' {
+		return errors.New("does not look like a bcrypt hash")
+	}
+
+	return nil
+}
+
 type MatchCmd struct {
-	Hash    string `arg:""`
+	Quiet   bool `short:"q" help:"omit printing the result"`
+	Hash    Hash `arg:""`
 	PwdInfo `embed:""`
+}
+
+func (cmd *MatchCmd) print(s string) {
+	if !cmd.Quiet {
+		fmt.Println(s)
+	}
 }
 
 func (cmd *MatchCmd) Run() error {
@@ -62,22 +82,22 @@ func (cmd *MatchCmd) Run() error {
 		return err
 	}
 
-	ok := match(pwd, cmd.Hash)
+	ok := match(pwd, string(cmd.Hash))
 	if ok {
-		fmt.Println("yes")
+		cmd.print("yes")
 	} else {
-		fmt.Println("no")
+		cmd.print("no")
 		os.Exit(1)
 	}
 	return nil
 }
 
 type CostCmd struct {
-	Hash string `arg:""`
+	Hash Hash `arg:""`
 }
 
 func (cmd *CostCmd) Run() error {
-	c, e := cost(cmd.Hash)
+	c, e := cost(string(cmd.Hash))
 	if e != nil {
 		return e
 	}
