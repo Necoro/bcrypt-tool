@@ -19,6 +19,11 @@ import (
 // unfortunately, there is no constant in the bcrypt package
 const maxPasswordLength = 72
 
+const (
+	NAME    = "bcrypt-tool"
+	VERSION = "2.0"
+)
+
 type PwdInfo struct {
 	TruncInput bool   `name:"truncate" help:"accept password input longer than ${maxPasswordLength} and truncate it"`
 	Password   string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
@@ -106,19 +111,22 @@ func (cmd *CostCmd) Run() error {
 }
 
 var CLI struct {
-	Hash  HashCmd  `cmd:"" help:"generate a bcrypt hash"`
-	Match MatchCmd `cmd:"" help:"check if password matches hash"`
-	Cost  CostCmd  `cmd:"" help:"print the cost of the given hash"`
+	Hash    HashCmd          `cmd:"" help:"generate a bcrypt hash"`
+	Match   MatchCmd         `cmd:"" help:"check if password matches hash"`
+	Cost    CostCmd          `cmd:"" help:"print the cost of the given hash"`
+	Version kong.VersionFlag `help:"print the current version (${version})"`
 }
 
 // needed to factor out for tests
 func kongParserOptions() []kong.Option {
 	return []kong.Option{
+		kong.Name(NAME),
 		kong.Description("A dandy CLI tool for generating and matching bcrypt hashes."),
 		kong.UsageOnError(),
 		kong.Vars{
 			"DEFAULT_COST":      strconv.Itoa(bcrypt.DefaultCost),
 			"maxPasswordLength": strconv.Itoa(maxPasswordLength),
+			"version":           NAME + " v" + VERSION,
 		},
 	}
 }
