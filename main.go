@@ -4,31 +4,58 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 
 	"github.com/alecthomas/kong"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/term"
 )
 
+// bcrypt handles at most 72 characters of password
+// unfortunately, there is no constant in the bcrypt package
+const maxPasswordLength = 72
+
+type PwdInfo struct {
+	TruncInput bool   `name:"truncate" help:"accept password input longer than ${maxPasswordLength} and truncate it"`
+	Password   string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
+}
+
 type HashCmd struct {
-	Cost     int    `short:"c" help:"Cost parameter for bcrypt." default:"${DEFAULT_COST}"`
-	Password string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
+	Cost    int `short:"c" help:"cost parameter for bcrypt" default:"${DEFAULT_COST}"`
+	PwdInfo `embed:""`
 }
 
 func (cmd *HashCmd) Run() error {
-	fmt.Println(hash(cmd.Password, cmd.Cost))
+	pwd, err := cmd.GetPwd()
+	if err != nil {
+		return err
+	}
+
+	h, err := hash(pwd, cmd.Cost)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(h)
 	return nil
 }
 
 type MatchCmd struct {
-	Hash     string `arg:""`
-	Password string `arg:"" optional:"" help:"read from stdin if omitted or '-'"`
+	Hash    string `arg:""`
+	PwdInfo `embed:""`
 }
 
 func (cmd *MatchCmd) Run() error {
-	ok := match(cmd.Hash, cmd.Password)
+	pwd, err := cmd.GetPwd()
+	if err != nil {
+		return err
+	}
+
+	ok := match(pwd, cmd.Hash)
 	if ok {
 		fmt.Println("yes")
 	} else {
@@ -39,11 +66,14 @@ func (cmd *MatchCmd) Run() error {
 }
 
 type CostCmd struct {
-	Hash string `arg:"" help:"read from stdin if omitted or '-'"`
+	Hash string `arg:""`
 }
 
 func (cmd *CostCmd) Run() error {
-	c := cost(cmd.Hash)
+	c, e := cost(cmd.Hash)
+	if e != nil {
+		return e
+	}
 	fmt.Printf("%d\n", c)
 	return nil
 }
@@ -58,7 +88,8 @@ var CLI struct {
 func kongParserOptions() []kong.Option {
 	return []kong.Option{
 		kong.Vars{
-			"DEFAULT_COST": strconv.Itoa(bcrypt.DefaultCost),
+			"DEFAULT_COST":      strconv.Itoa(bcrypt.DefaultCost),
+			"maxPasswordLength": strconv.Itoa(maxPasswordLength),
 		},
 	}
 }
@@ -69,32 +100,68 @@ func main() {
 	ctx.FatalIfErrorf(err)
 }
 
-func cost(hash string) int {
-	h := []byte(hash)
-	c, e := bcrypt.Cost(h)
-	if e != nil {
-		_, _ = fmt.Fprintln(os.Stderr, e)
-		os.Exit(2)
+func (p *PwdInfo) GetPwd() ([]byte, error) {
+	if p.Password == "" || p.Password == "-" {
+		return p.readFromStdin()
 	}
-	return c
+	return []byte(p.Password), nil
 }
 
-func match(password, hash string) bool {
-	p := []byte(password)
-	h := []byte(hash)
-	e := bcrypt.CompareHashAndPassword(h, p)
-	if e != nil {
-		return false
+func (p *PwdInfo) readFromStdin() ([]byte, error) {
+	fd := int(os.Stdin.Fd())
+
+	// we have a terminal, don't treat as a pipe
+	if term.IsTerminal(fd) {
+		fmt.Print("Password: ")
+		password, err := term.ReadPassword(fd)
+		fmt.Println("")
+
+		if err != nil {
+			return nil, fmt.Errorf("reading password: %w", err)
+		}
+		return password, nil
 	}
-	return true
+
+	maxLen := maxPasswordLength + 1
+	if p.TruncInput {
+		maxLen = maxPasswordLength
+	}
+
+	buf := make([]byte, maxLen)
+	n, err := io.ReadFull(os.Stdin, buf)
+	if errors.Is(err, io.EOF) || buf[0] == '\n' || buf[0] == 0 {
+		return nil, fmt.Errorf("no password provided")
+	} else if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
+		return nil, fmt.Errorf("reading password: %w", err)
+	} else if n > maxPasswordLength {
+		//goland:noinspection GoErrorStringFormat
+		return nil, fmt.Errorf("bcrypt supports an input of at most %d bytes."+
+			" Use --truncate if you want to truncate the input to that length.", maxPasswordLength)
+	}
+
+	// remove trailing '\n'
+	if buf[n-1] == '\n' {
+		n--
+	}
+
+	return buf[:n], nil
 }
 
-func hash(password string, cost int) string {
-	p := []byte(password)
-	h, e := bcrypt.GenerateFromPassword(p, cost)
+func cost(hash string) (int, error) {
+	h := []byte(hash)
+	return bcrypt.Cost(h)
+}
+
+func match(password []byte, hash string) bool {
+	h := []byte(hash)
+	e := bcrypt.CompareHashAndPassword(h, password)
+	return e == nil
+}
+
+func hash(password []byte, cost int) (string, error) {
+	h, e := bcrypt.GenerateFromPassword(password, cost)
 	if e != nil {
-		_, _ = fmt.Fprintln(os.Stderr, e)
-		os.Exit(2)
+		return "", e
 	}
-	return string(h)
+	return string(h), nil
 }
