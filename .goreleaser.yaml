@@ -1,0 +1,33 @@
+version: 2
+project_name: bcrypt-tool
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+   -
+    id: standalone
+    binary: bcrypt-tool
+    ldflags:
+        - -s -w
+    goos:
+        - windows
+        - linux
+        - darwin
+    goarch:
+        - amd64
+        - arm64
+archives:
+  -
+    ids:
+        - standalone
+
+    formats: tar.gz
+    format_overrides:
+        - goos: windows
+          formats: zip
+    files:
+        - LICENSE
+        - README.md
+        - CHANGELOG.md

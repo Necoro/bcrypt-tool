@@ -1,0 +1,50 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  goreleaser:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: 'go.mod'
+
+    - name: Get version from tag
+      uses: bcomnes/get-git-tag@v3.0.8
+      id: tag_name
+      with:
+          tagRegex: "v(.*)"
+
+    - name: Get Changelog Entry
+      id: changelog_reader
+      uses: mindsers/changelog-reader-action@v2
+      with:
+        version: ${{ steps.tag_name.outputs.tag }}
+        path: ./CHANGELOG.md
+
+    - name: Safe Changelog Text
+      id: changelog_text
+      run: |
+          echo '${{ steps.changelog_reader.outputs.changes }}' >> $HOME/changelog_entry
+          echo "clfile=$HOME/changelog_entry" >> $GITHUB_OUTPUT
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v6
+      with:
+          version: '~> v2'
+          args: --release-notes ${{ steps.changelog_text.outputs.clfile }}
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
