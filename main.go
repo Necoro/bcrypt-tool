@@ -49,7 +49,7 @@ func (cmd *CostCmd) Run() error {
 }
 
 var CLI struct {
-	Hash  HashCmd  `cmd:"" help:"generate a bcrypt hash" default:"withargs"`
+	Hash  HashCmd  `cmd:"" help:"generate a bcrypt hash"`
 	Match MatchCmd `cmd:"" help:"check if password matches hash"`
 	Cost  CostCmd  `cmd:"" help:"print the cost of the given hash"`
 }
