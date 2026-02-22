@@ -1,5 +1,6 @@
 *~
 **/*.snap
+.idea
 
 bcrypt-tool
 output/
