@@ -16,9 +16,6 @@ It is pre-compiled for many operating systems and architectures including
 - Linux
 - Windows
 - MacOS
-- FreeBSD
-- OpenBSD
-- Plan9
 
 #### Build from source
 The `bcrypt-tool` command can be compiled by running
