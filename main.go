@@ -29,6 +29,13 @@ type HashCmd struct {
 	PwdInfo `embed:""`
 }
 
+func (cmd *HashCmd) Validate() error {
+	if cmd.Cost < bcrypt.MinCost || cmd.Cost > bcrypt.MaxCost {
+		return fmt.Errorf("cost must be between %d and %d", bcrypt.MinCost, bcrypt.MaxCost)
+	}
+	return nil
+}
+
 func (cmd *HashCmd) Run() error {
 	pwd, err := cmd.GetPwd()
 	if err != nil {
@@ -87,6 +94,8 @@ var CLI struct {
 // needed to factor out for tests
 func kongParserOptions() []kong.Option {
 	return []kong.Option{
+		kong.Description("A dandy CLI tool for generating and matching bcrypt hashes."),
+		kong.UsageOnError(),
 		kong.Vars{
 			"DEFAULT_COST":      strconv.Itoa(bcrypt.DefaultCost),
 			"maxPasswordLength": strconv.Itoa(maxPasswordLength),
