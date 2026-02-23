@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changes
 - Switch to upstream kong from our own fork. Results in slight changes to `--help`
+- Releases archives now contain an intermediate directory.
 
 ## [2.0.0] - 22.02.2026
 ### Major Changes
