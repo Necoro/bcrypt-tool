@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/alecthomas/assert/v2 v2.11.0
-	github.com/alecthomas/kong v1.14.0
+	github.com/alecthomas/kong v1.15.0
 	golang.org/x/crypto v0.48.0
 	golang.org/x/term v0.40.0
 )
